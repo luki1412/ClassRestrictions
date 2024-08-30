@@ -4,7 +4,7 @@
 #pragma newdecls required
 #pragma semicolon 1
 
-#define PLUGIN_VERSION "3.04"
+#define PLUGIN_VERSION "3.05"
 
 #define TF_CLASS_DEMOMAN		4
 #define TF_CLASS_ENGINEER		9
@@ -19,6 +19,7 @@
 
 #define TF_TEAM_BLU				3
 #define TF_TEAM_RED				2
+#define TF_TEAM_SPC				1
 
 public Plugin myinfo =
 {
@@ -96,15 +97,7 @@ public void OnConfigsExecuted()
 	GetCurrentMap(mapName, sizeof(mapName));
 	ServerCommand("exec \"sourcemod/Class_Restrictions_For_Humans/%s.cfg\"", mapName);
 }
-//there is no space, so the server admins set up the cvars incorrectly. lets warn them through logs
-void NoSpace()
-{
-	LogError("There is not enough space for another human!");
-	LogError("Setting BLU and RED scouts limit for humans to unlimited. Fix your class limits for humans!");
-	SetConVarInt( g_hCvLimits[TF_TEAM_BLU][TF_CLASS_SCOUT], -1, false, false );
-	SetConVarInt( g_hCvLimits[TF_TEAM_RED][TF_CLASS_SCOUT], -1, false, false );
-}
-//player spawned, lets do stuff
+//player spawned event
 public void Event_PlayerSpawn(Handle event, const char[] name, bool dontBroadcast)
 {
 	if(!GetConVarBool(g_hCvEnabled))
@@ -132,7 +125,16 @@ public void Event_PlayerSpawn(Handle event, const char[] name, bool dontBroadcas
 				{
 					if(IsThereEnoughSpace(TF_TEAM_BLU) == true)
 					{
-						if(IsPlayerAlive(iClient)) 
+						int iFreeClass = SelectFreeClass(TF_TEAM_BLU);
+						TF2_SetPlayerClass(iClient, view_as<TFClassType>(iFreeClass), _, true);
+
+						if(iFreeClass == 0)
+						{
+							ChangeClientTeam(iClient, TF_TEAM_SPC);
+							PrintCenterText(iClient, "All classes are full on RED and BLU! Moving you to spectator!");
+							return;
+						}
+						else if(IsPlayerAlive(iClient)) 
 						{
 							SetEntProp(iClient, Prop_Send, "m_lifeState", 2);
 							ChangeClientTeam(iClient, TF_TEAM_BLU);
@@ -144,17 +146,7 @@ public void Event_PlayerSpawn(Handle event, const char[] name, bool dontBroadcas
 						}
 						
 						PrintCenterText(iClient, "The RED team is full! Changing your team to BLU.");
-						int i = SelectFreeClass(GetClientTeam(iClient));
-				
-						if(i == 0)
-						{
-							ChangeClientTeam(iClient, 1);
-							PrintCenterText(iClient, "All classes are full on RED and BLU! Moving you to spectator!");
-							return;
-						}
-						
-						TF2_SetPlayerClass(iClient, view_as<TFClassType>(i), _, true);
-						
+
 						if(IsPlayerAlive(iClient)) 
 						{
 							RequestFrame(RespawnPlayer, iUser);
@@ -164,27 +156,12 @@ public void Event_PlayerSpawn(Handle event, const char[] name, bool dontBroadcas
 					}
 					else
 					{
-						NoSpace();
-						int i = SelectFreeClass(GetClientTeam(iClient));
-
-						if(i == 0)
-						{
-							ChangeClientTeam(iClient, 1);
-							PrintCenterText(iClient, "All classes are full on RED and BLU! Moving you to spectator!");
-							return;
-						}
-						
-						TF2_SetPlayerClass(iClient, view_as<TFClassType>(i), _, true);
-						
-						if(IsPlayerAlive(iClient)) 
-						{
-							RequestFrame(RespawnPlayer, iUser);
-						}
-						
+						TF2_SetPlayerClass(iClient, view_as<TFClassType>(TF_CLASS_UNKNOWN), _, true);
+						ChangeClientTeam(iClient, TF_TEAM_SPC);
+						PrintCenterText(iClient, "All classes are full on RED and BLU! Moving you to spectator!");
 						return;
 					}
 				}
-			
 			}
 			case TF_TEAM_BLU:
 			{
@@ -192,7 +169,16 @@ public void Event_PlayerSpawn(Handle event, const char[] name, bool dontBroadcas
 				{
 					if(IsThereEnoughSpace(TF_TEAM_RED) == true)
 					{
-						if(IsPlayerAlive(iClient)) 
+						int iFreeClass = SelectFreeClass(TF_TEAM_RED);
+						TF2_SetPlayerClass(iClient, view_as<TFClassType>(iFreeClass), _, true);
+				
+						if(iFreeClass == 0)
+						{
+							ChangeClientTeam(iClient, TF_TEAM_SPC);
+							PrintCenterText(iClient, "All classes are full on RED and BLU! Moving you to spectator!");
+							return;
+						}
+						else if(IsPlayerAlive(iClient)) 
 						{
 							SetEntProp(iClient, Prop_Send, "m_lifeState", 2);
 							ChangeClientTeam(iClient, TF_TEAM_RED);
@@ -204,17 +190,7 @@ public void Event_PlayerSpawn(Handle event, const char[] name, bool dontBroadcas
 						}
 						
 						PrintCenterText(iClient, "The BLU team is full! Changing your team to RED.");
-						int i = SelectFreeClass(GetClientTeam(iClient));
-				
-						if(i == 0)
-						{
-							ChangeClientTeam(iClient, 1);
-							PrintCenterText(iClient, "All classes are full on RED and BLU! Moving you to spectator!");
-							return;
-						}
-						
-						TF2_SetPlayerClass(iClient, view_as<TFClassType>(i), _, true);
-						
+
 						if(IsPlayerAlive(iClient)) 
 						{
 							RequestFrame(RespawnPlayer, iUser);
@@ -224,27 +200,12 @@ public void Event_PlayerSpawn(Handle event, const char[] name, bool dontBroadcas
 					}
 					else
 					{
-						NoSpace();
-						int i = SelectFreeClass(GetClientTeam(iClient));
-				
-						if(i == 0)
-						{
-							ChangeClientTeam(iClient, 1);
-							PrintCenterText(iClient, "All classes are full on RED and BLU! Moving you to spectator!");
-							return;
-						}
-						
-						TF2_SetPlayerClass(iClient, view_as<TFClassType>(i), _, true);
-						
-						if(IsPlayerAlive(iClient)) 
-						{
-							RequestFrame(RespawnPlayer, iUser);
-						}
-						
+						TF2_SetPlayerClass(iClient, view_as<TFClassType>(TF_CLASS_UNKNOWN), _, true);
+						ChangeClientTeam(iClient, TF_TEAM_SPC);
+						PrintCenterText(iClient, "All classes are full on RED and BLU! Moving you to spectator!");
 						return;
 					}
 				}
-			
 			}
 			default:
 			{
@@ -268,16 +229,15 @@ public void Event_PlayerSpawn(Handle event, const char[] name, bool dontBroadcas
 			
 			PrintCenterText(iClient, "The class you picked is full! Selecting a random free class.");
 			
-			int i = SelectFreeClass(GetClientTeam(iClient));
+			int iFreeClass = SelectFreeClass(iTeam);
+			TF2_SetPlayerClass(iClient, view_as<TFClassType>(iFreeClass), _, true);
 	
-			if(i == 0)
+			if(iFreeClass == 0)
 			{
-				ChangeClientTeam(iClient, 1);
+				ChangeClientTeam(iClient, TF_TEAM_SPC);
 				PrintCenterText(iClient, "All classes are full on RED and BLU! Moving you to spectator!");
 				return;
 			}
-			
-			TF2_SetPlayerClass(iClient, view_as<TFClassType>(i), _, true);
 			
 			if(IsPlayerAlive(iClient)) 
 			{
@@ -298,19 +258,16 @@ void RespawnPlayer(int iUser)
 		TF2_RespawnPlayer(iClient);
 	}
 }
-//how many players do have on a team
+//how many players do we have on a team
 int GetHumanClientsCount(int iTeam) 
 {
 	int clients = 0;
 	
 	for(int i = 1; i <= MaxClients; i++) 
 	{
-		if(IsPlayerHereLoop(i)) 
+		if(IsPlayerHereLoop(i) && (GetClientTeam(i) == iTeam)) 
 		{
-			if(GetClientTeam(i) == iTeam)
-			{
-				clients++;
-			}
+			clients++;
 		}
 	}
 	
@@ -346,16 +303,7 @@ bool IsThereEnoughSpace(int iTeam)
 	}	
 	else
 	{
-		int HumansCount = GetHumanClientsCount(iTeam);
-		
-		if(total >= HumansCount)
-		{
-			return true;
-		}
-		else
-		{
-			return false;
-		}
+		return total >= GetHumanClientsCount(iTeam);
 	}
 }
 //is class on that team full
@@ -382,21 +330,13 @@ bool IsFull(int iTeam, int iClass)
 		}
 	}
 	
-	if(iCount > iLimit)
-	{
-		return true;
-	}
-	else
-	{
-		return false;
-	}
+	return iCount > iLimit;
 }
-//is the player an admin?
+//is the player an admin
 bool IsImmune(int iClient)
 {
 	char sFlags[12];
 	GetConVarString(g_hCvFlags, sFlags, sizeof(sFlags));
-	
 	return !StrEqual(sFlags, "") && GetUserFlagBits(iClient) & (ReadFlagString(sFlags)|ADMFLAG_ROOT);
 }
 //select a free class for the player
@@ -427,7 +367,7 @@ int SelectFreeClass(int iTeam)
 	x--; 
 	return classes[GetRandomUInt(0,x)];	
 }
-//custom get random int within range function
+//custom function to get random int within range
 int GetRandomUInt(int min, int max)
 {
 	return RoundToFloor(GetURandomFloat() * (max - min + 1)) + min;
@@ -435,5 +375,5 @@ int GetRandomUInt(int min, int max)
 //basic check for players
 bool IsPlayerHereLoop(int client)
 {
-	return (IsClientInGame(client) && !IsFakeClient(client));
+	return IsClientInGame(client) && !IsFakeClient(client);
 }
