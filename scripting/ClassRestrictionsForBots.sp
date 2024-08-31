@@ -4,7 +4,7 @@
 #pragma newdecls required
 #pragma semicolon 1
 
-#define PLUGIN_VERSION "3.05"
+#define PLUGIN_VERSION "3.06"
 
 #define TF_CLASS_DEMOMAN		4
 #define TF_CLASS_ENGINEER		9
@@ -88,6 +88,13 @@ public void OnConfigsExecuted()
 	GetCurrentMap(mapName, sizeof(mapName));
 	ServerCommand("exec \"sourcemod/Class_Restrictions_For_Bots/%s.cfg\"", mapName);
 }
+//there is no space, so the server admins set up the cvars incorrectly. have to change them otherwise bots will try to join teams and crash the server
+void NoSpace()
+{
+	LogError("There is not enough space for another bot! Setting BLU and RED spies limit for bots to unlimited to avoid a crash. Fix your class limits for bots!");
+	SetConVarInt( g_hCvLimits[TF_TEAM_BLU][TF_CLASS_SPY], -1, false, false );
+	SetConVarInt( g_hCvLimits[TF_TEAM_RED][TF_CLASS_SPY], -1, false, false );
+}
 //player spawned event
 public void Event_PlayerSpawn(Handle event, const char[] name, bool dontBroadcast)
 {
@@ -139,6 +146,7 @@ public void Event_PlayerSpawn(Handle event, const char[] name, bool dontBroadcas
 					}
 					else
 					{
+						NoSpace();
 						TF2_SetPlayerClass(iClient, view_as<TFClassType>(TF_CLASS_UNKNOWN), _, true);
 						ChangeClientTeam(iClient, TF_TEAM_SPC);
 						return;
@@ -179,6 +187,7 @@ public void Event_PlayerSpawn(Handle event, const char[] name, bool dontBroadcas
 					}
 					else
 					{
+						NoSpace();
 						TF2_SetPlayerClass(iClient, view_as<TFClassType>(TF_CLASS_UNKNOWN), _, true);
 						ChangeClientTeam(iClient, TF_TEAM_SPC);
 						return;
