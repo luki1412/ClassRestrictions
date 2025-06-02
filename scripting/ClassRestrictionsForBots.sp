@@ -4,7 +4,7 @@
 #pragma newdecls required
 #pragma semicolon 1
 
-#define PLUGIN_VERSION "3.07"
+#define PLUGIN_VERSION "3.08"
 
 #define TF_CLASS_DEMOMAN		4
 #define TF_CLASS_ENGINEER		9
@@ -140,8 +140,8 @@ public void Event_PlayerSpawn(Handle event, const char[] name, bool dontBroadcas
 					else
 					{
 						NoSpace();
-						TF2_SetPlayerClass(iClient, view_as<TFClassType>(TF_CLASS_UNKNOWN), _, true);
 						ChangeClientTeam(iClient, TF_TEAM_SPC);
+						TF2_SetPlayerClass(iClient, view_as<TFClassType>(TF_CLASS_UNKNOWN), _, true);
 						return;
 					}
 				}
@@ -181,8 +181,8 @@ public void Event_PlayerSpawn(Handle event, const char[] name, bool dontBroadcas
 					else
 					{
 						NoSpace();
-						TF2_SetPlayerClass(iClient, view_as<TFClassType>(TF_CLASS_UNKNOWN), _, true);
 						ChangeClientTeam(iClient, TF_TEAM_SPC);
+						TF2_SetPlayerClass(iClient, view_as<TFClassType>(TF_CLASS_UNKNOWN), _, true);
 						return;
 					}
 				}
@@ -276,6 +276,11 @@ bool IsThereEnoughSpace(int iTeam)
 //is class on that team full
 bool IsFull(int iTeam, int iClass)
 {
+	if(iClass == 0)
+	{
+		return true;		
+	}
+
 	int iLimit = GetConVarInt(g_hCvLimits[iTeam][iClass]);
 
 	if(iLimit == -1)
