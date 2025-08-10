@@ -4,7 +4,7 @@
 #pragma newdecls required
 #pragma semicolon 1
 
-#define PLUGIN_VERSION "3.08"
+#define PLUGIN_VERSION "3.09"
 
 #define TF_CLASS_DEMOMAN		4
 #define TF_CLASS_ENGINEER		9
@@ -66,7 +66,7 @@ public void OnPluginStart()
 	g_hCvLimits[TF_TEAM_RED][TF_CLASS_SNIPER]   = CreateConVar("sm_crb_red_snipers",   "-1", "Limits RED bot snipers");
 	g_hCvLimits[TF_TEAM_RED][TF_CLASS_SOLDIER]  = CreateConVar("sm_crb_red_soldiers",  "-1", "Limits RED bot soldiers");
 	g_hCvLimits[TF_TEAM_RED][TF_CLASS_SPY]      = CreateConVar("sm_crb_red_spies",     "-1", "Limits RED bot spies");
-
+	RegAdminCmd("sm_crb_list_limits", Command_List, ADMFLAG_CONFIG, "Lists current bot limits in the console");
 	AutoExecConfig(true, "Class_Restrictions_For_Bots");
 	HookEvent("player_spawn", Event_PlayerSpawn);
 	SetConVarString(hCvVersion, PLUGIN_VERSION);
@@ -87,6 +87,64 @@ void NoSpace()
 	LogError("There is not enough space for another bot! Setting BLU and RED spies limit for bots to unlimited to avoid a crash. Fix your class limits for bots!");
 	SetConVarInt( g_hCvLimits[TF_TEAM_BLU][TF_CLASS_SPY], -1, false, false );
 	SetConVarInt( g_hCvLimits[TF_TEAM_RED][TF_CLASS_SPY], -1, false, false );
+}
+//list current limits in the console
+public Action Command_List(int client, int args)
+{
+	if(GetConVarBool(g_hCvEnabled) && (client == 0 || IsClientConnected(client)))
+	{
+		if(GetCmdReplySource() == SM_REPLY_TO_CHAT)
+		{
+			PrintToChat(client, "[CRB] See console for output");
+		}
+
+		char output[1048];
+		FormatEx(output, sizeof(output), "\
+-----------------------------------\n\
+Current Class Restrictions for Bots\n\
+-\n\
+Limit for BLU bot scouts is    %i\n\
+Limit for BLU bot soldiers is  %i\n\
+Limit for BLU bot pyros is     %i\n\
+Limit for BLU bot demomen is   %i\n\
+Limit for BLU bot heavies is   %i\n\
+Limit for BLU bot engineers is %i\n\
+Limit for BLU bot medics is    %i\n\
+Limit for BLU bot snipers is   %i\n\
+Limit for BLU bot spies is     %i\n\
+-\n\
+Limit for RED bot scouts is    %i\n\
+Limit for RED bot soldiers is  %i\n\
+Limit for RED bot pyros is     %i\n\
+Limit for RED bot demomen is   %i\n\
+Limit for RED bot heavies is   %i\n\
+Limit for RED bot engineers is %i\n\
+Limit for RED bot medics is    %i\n\
+Limit for RED bot snipers is   %i\n\
+Limit for RED bot spies is     %i\n\
+-----------------------------------",
+		GetConVarInt(g_hCvLimits[TF_TEAM_BLU][TF_CLASS_SCOUT]),
+		GetConVarInt(g_hCvLimits[TF_TEAM_BLU][TF_CLASS_SOLDIER]),
+		GetConVarInt(g_hCvLimits[TF_TEAM_BLU][TF_CLASS_PYRO]),
+		GetConVarInt(g_hCvLimits[TF_TEAM_BLU][TF_CLASS_DEMOMAN]),
+		GetConVarInt(g_hCvLimits[TF_TEAM_BLU][TF_CLASS_HEAVY]),
+		GetConVarInt(g_hCvLimits[TF_TEAM_BLU][TF_CLASS_ENGINEER]),
+		GetConVarInt(g_hCvLimits[TF_TEAM_BLU][TF_CLASS_MEDIC]),
+		GetConVarInt(g_hCvLimits[TF_TEAM_BLU][TF_CLASS_SNIPER]),
+		GetConVarInt(g_hCvLimits[TF_TEAM_BLU][TF_CLASS_SPY]),
+		GetConVarInt(g_hCvLimits[TF_TEAM_RED][TF_CLASS_SCOUT]),
+		GetConVarInt(g_hCvLimits[TF_TEAM_RED][TF_CLASS_SOLDIER]),
+		GetConVarInt(g_hCvLimits[TF_TEAM_RED][TF_CLASS_PYRO]),
+		GetConVarInt(g_hCvLimits[TF_TEAM_RED][TF_CLASS_DEMOMAN]),
+		GetConVarInt(g_hCvLimits[TF_TEAM_RED][TF_CLASS_HEAVY]),
+		GetConVarInt(g_hCvLimits[TF_TEAM_RED][TF_CLASS_ENGINEER]),
+		GetConVarInt(g_hCvLimits[TF_TEAM_RED][TF_CLASS_MEDIC]),
+		GetConVarInt(g_hCvLimits[TF_TEAM_RED][TF_CLASS_SNIPER]),
+		GetConVarInt(g_hCvLimits[TF_TEAM_RED][TF_CLASS_SPY]));
+		PrintToConsole(client, output);
+	}
+
+	return Plugin_Handled;
 }
 //player spawned event
 public void Event_PlayerSpawn(Handle event, const char[] name, bool dontBroadcast)

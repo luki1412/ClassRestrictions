@@ -4,7 +4,7 @@
 #pragma newdecls required
 #pragma semicolon 1
 
-#define PLUGIN_VERSION "3.08"
+#define PLUGIN_VERSION "3.09"
 
 #define TF_CLASS_DEMOMAN		4
 #define TF_CLASS_ENGINEER		9
@@ -55,7 +55,7 @@ public void OnPluginStart()
 {
 	ConVar hCvVersion = CreateConVar("sm_crh_version", PLUGIN_VERSION, "TF2 Class Restrictions for Humans version cvar", FCVAR_NOTIFY|FCVAR_DONTRECORD);
 	g_hCvEnabled                                = CreateConVar("sm_crh_enabled",       "1",  "Enables/disables restricting classes in TF2 for Human players", FCVAR_NOTIFY);
-	g_hCvFlags                                  = CreateConVar("sm_crh_flags",         "b",   "Admin flag/s for immunity to restricting classes. If multiple flags are provided, one validated flag is enough to be immune.");
+	g_hCvFlags                                  = CreateConVar("sm_crh_flags",         "b",  "Admin flag/s for immunity to restricting classes. If multiple flags are provided, one validated flag is enough to be immune.");
 	g_hCvImmunity                               = CreateConVar("sm_crh_immunity",      "0",  "Enables/disables admins being immune to restricting classes");
 	g_hCvClassMenu                              = CreateConVar("sm_crh_classmenu",     "0",  "Enables/disables the class menu popping up when you pick the wrong class");
 	g_hCvSounds                                 = CreateConVar("sm_crh_sounds",        "0",  "Enables/disables the Nope sound when you pick the wrong class");
@@ -77,7 +77,7 @@ public void OnPluginStart()
 	g_hCvLimits[TF_TEAM_RED][TF_CLASS_SNIPER]   = CreateConVar("sm_crh_red_snipers",   "-1", "Limits RED human snipers");
 	g_hCvLimits[TF_TEAM_RED][TF_CLASS_SOLDIER]  = CreateConVar("sm_crh_red_soldiers",  "-1", "Limits RED human soldiers");
 	g_hCvLimits[TF_TEAM_RED][TF_CLASS_SPY]      = CreateConVar("sm_crh_red_spies",     "-1", "Limits RED human spies");
-
+	RegAdminCmd("sm_crh_list_limits", Command_List, ADMFLAG_CONFIG, "Lists current human limits in the console");
 	AutoExecConfig(true, "Class_Restrictions_For_Humans");
 	LoadTranslations("class.restrictions.for.humans");
 	HookEvent("player_spawn", Event_PlayerSpawn);
@@ -90,6 +90,64 @@ public void OnConfigsExecuted()
 	char mapName[PLATFORM_MAX_PATH];
 	GetCurrentMap(mapName, sizeof(mapName));
 	ServerCommand("exec \"sourcemod/Class_Restrictions_For_Humans/%s.cfg\"", mapName);
+}
+//list current limits in the console
+public Action Command_List(int client, int args)
+{
+	if(GetConVarBool(g_hCvEnabled) && (client == 0 || IsClientConnected(client)))
+	{
+		if(GetCmdReplySource() == SM_REPLY_TO_CHAT)
+		{
+			PrintToChat(client, "[CRB] See console for output");
+		}
+
+		char output[1048];
+		FormatEx(output, sizeof(output), "\
+-------------------------------------\n\
+Current Class Restrictions for Humans\n\
+-\n\
+Limit for BLU human scouts is    %i\n\
+Limit for BLU human soldiers is  %i\n\
+Limit for BLU human pyros is     %i\n\
+Limit for BLU human demomen is   %i\n\
+Limit for BLU human heavies is   %i\n\
+Limit for BLU human engineers is %i\n\
+Limit for BLU human medics is    %i\n\
+Limit for BLU human snipers is   %i\n\
+Limit for BLU human spies is     %i\n\
+-\n\
+Limit for RED human scouts is    %i\n\
+Limit for RED human soldiers is  %i\n\
+Limit for RED human pyros is     %i\n\
+Limit for RED human demomen is   %i\n\
+Limit for RED human heavies is   %i\n\
+Limit for RED human engineers is %i\n\
+Limit for RED human medics is    %i\n\
+Limit for RED human snipers is   %i\n\
+Limit for RED human spies is     %i\n\
+-------------------------------------",
+		GetConVarInt(g_hCvLimits[TF_TEAM_BLU][TF_CLASS_SCOUT]),
+		GetConVarInt(g_hCvLimits[TF_TEAM_BLU][TF_CLASS_SOLDIER]),
+		GetConVarInt(g_hCvLimits[TF_TEAM_BLU][TF_CLASS_PYRO]),
+		GetConVarInt(g_hCvLimits[TF_TEAM_BLU][TF_CLASS_DEMOMAN]),
+		GetConVarInt(g_hCvLimits[TF_TEAM_BLU][TF_CLASS_HEAVY]),
+		GetConVarInt(g_hCvLimits[TF_TEAM_BLU][TF_CLASS_ENGINEER]),
+		GetConVarInt(g_hCvLimits[TF_TEAM_BLU][TF_CLASS_MEDIC]),
+		GetConVarInt(g_hCvLimits[TF_TEAM_BLU][TF_CLASS_SNIPER]),
+		GetConVarInt(g_hCvLimits[TF_TEAM_BLU][TF_CLASS_SPY]),
+		GetConVarInt(g_hCvLimits[TF_TEAM_RED][TF_CLASS_SCOUT]),
+		GetConVarInt(g_hCvLimits[TF_TEAM_RED][TF_CLASS_SOLDIER]),
+		GetConVarInt(g_hCvLimits[TF_TEAM_RED][TF_CLASS_PYRO]),
+		GetConVarInt(g_hCvLimits[TF_TEAM_RED][TF_CLASS_DEMOMAN]),
+		GetConVarInt(g_hCvLimits[TF_TEAM_RED][TF_CLASS_HEAVY]),
+		GetConVarInt(g_hCvLimits[TF_TEAM_RED][TF_CLASS_ENGINEER]),
+		GetConVarInt(g_hCvLimits[TF_TEAM_RED][TF_CLASS_MEDIC]),
+		GetConVarInt(g_hCvLimits[TF_TEAM_RED][TF_CLASS_SNIPER]),
+		GetConVarInt(g_hCvLimits[TF_TEAM_RED][TF_CLASS_SPY]));
+		PrintToConsole(client, output);
+	}
+
+	return Plugin_Handled;
 }
 //player spawned event
 public void Event_PlayerSpawn(Handle event, const char[] name, bool dontBroadcast)
